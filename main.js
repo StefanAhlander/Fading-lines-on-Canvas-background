@@ -1,9 +1,9 @@
 const backgroundLinesInit = () => {
-  let winWidth, winHeight, cursorX = 0, cursorY = 0, points, lastRender;
+  let cursorX = 0, cursorY = 0, points, lastRender;
   const virtualWidth = 1920;
   const virtualHeight = 1080;
   const maxLineLength = 200;
-  const numStars = 130;
+  const numPoints = 130;
   const bgColorStart = '#0a080f';
   const bgColorStop = '#2a1b3d';
   const lineColor = '216, 63, 119';
@@ -11,11 +11,11 @@ const backgroundLinesInit = () => {
   const ctx = canvas.getContext('2d');
 
   const fillScreen = () => {
-    const gradient = ctx.createLinearGradient(0, 0, 0, winHeight);
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
     gradient.addColorStop(0, bgColorStart);
     gradient.addColorStop(1, bgColorStop);
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, winWidth, winHeight);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
 
   const drawLine = (p1, p2, color = lineColor) => {
@@ -37,24 +37,22 @@ const backgroundLinesInit = () => {
 
   const seedPoints = (num) => Array(num).fill(null).map((e) => createPoint());
 
-  const movePoints = (oldPoints, step = 1) => {
-    return oldPoints.map(point => {
-      let newPoint = {
-        ...point,
-        x: point.x + (point.deltaX * step),
-        y: point.y + (point.deltaY * step)
-      };
-      if (newPoint.x <= 0 || newPoint.x >= 1920) {
-        newPoint.deltaX = -point.deltaX;
-        newPoint.x += (newPoint.deltaX * step);
-      }
-      if (newPoint.y <= 0 || newPoint.y >= 1080) {
-        newPoint.deltaY = -point.deltaY;
-        newPoint.y += (newPoint.deltaY * step);
-      }
-      return newPoint;
-    });
-  };
+  const movePoints = (oldPoints, step = 1) => oldPoints.map(point => {
+    let newPoint = {
+      ...point,
+      x: point.x + (point.deltaX * step),
+      y: point.y + (point.deltaY * step)
+    };
+    if (newPoint.x <= 0 || newPoint.x >= virtualWidth) {
+      newPoint.deltaX = -point.deltaX;
+      newPoint.x += (newPoint.deltaX * step);
+    }
+    if (newPoint.y <= 0 || newPoint.y >= virtualHeight) {
+      newPoint.deltaY = -point.deltaY;
+      newPoint.y += (newPoint.deltaY * step);
+    }
+    return newPoint;
+  });
 
   const makeLines = points => {
     let lines = [];
@@ -72,12 +70,12 @@ const backgroundLinesInit = () => {
   };
 
   const paintLines = lines => {
-    lines.forEach(pointPair => drawLine(pointPair[0], pointPair[1], pointPair[2]));
+    lines.forEach(line => drawLine(line[0], line[1], line[2]));
   };
 
   const setSize = () => {
-    canvas.width = winWidth = window.screen.availWidth;
-    canvas.height = winHeight = window.screen.availHeight;
+    canvas.width = window.screen.availWidth;
+    canvas.height = window.screen.availHeight;
   };
 
   function getMouseCoordinates(canvas, evt) {
@@ -97,7 +95,7 @@ const backgroundLinesInit = () => {
     if (lastRender === undefined) {
       lastRender = timeStamp;
     }
-    let step = (timeStamp - lastRender) / 8;
+    let step = (timeStamp - lastRender) / 8; // set speed of animation
     lastRender = timeStamp;
 
     fillScreen();
@@ -107,8 +105,7 @@ const backgroundLinesInit = () => {
       x: cursorX,
       y: cursorY
     });
-    const lines = makeLines(pointsWithCursor);
-    paintLines(lines);
+    paintLines(makeLines(pointsWithCursor));
     window.requestAnimationFrame(render);
   };
 
@@ -116,7 +113,7 @@ const backgroundLinesInit = () => {
   window.onresize = setSize;
   document.querySelector('body').addEventListener('mousemove', mouseMoveHandler);
   setSize();
-  points = seedPoints(numStars);
+  points = seedPoints(numPoints);
   window.requestAnimationFrame(render);
 };
 
