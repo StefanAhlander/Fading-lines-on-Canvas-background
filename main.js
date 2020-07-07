@@ -91,6 +91,11 @@ const backgroundLinesInit = () => {
     getMouseCoordinates(canvas, evt);
   };
 
+  const addCursorToPoints = (points) => [...points, {
+    x: cursorX,
+    y: cursorY
+  }];
+
   const render = (timeStamp) => {
     if (lastRender === undefined) {
       lastRender = timeStamp;
@@ -100,11 +105,7 @@ const backgroundLinesInit = () => {
 
     fillScreen();
     points = movePoints(points, step);
-    const pointsWithCursor = [...points];
-    pointsWithCursor.push({
-      x: cursorX,
-      y: cursorY
-    });
+    pointsWithCursor = addCursorToPoints(points);
     paintLines(makeLines(pointsWithCursor));
     window.requestAnimationFrame(render);
   };
