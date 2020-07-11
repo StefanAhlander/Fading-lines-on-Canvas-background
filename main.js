@@ -1,5 +1,6 @@
 const backgroundLinesInit = () => {
-  let cursorX = 0, cursorY = 0, points, lastRender;
+  // Initialize variables and canvas
+  let cursorX = 0, cursorY = 0, points, start;
   const virtualWidth = 1920;
   const virtualHeight = 1080;
   const maxLineLength = 200;
@@ -10,7 +11,8 @@ const backgroundLinesInit = () => {
   const canvas = document.querySelector('#canvas');
   const ctx = canvas.getContext('2d');
 
-  const fillScreen = () => {
+  // Function definitions
+  const fillScreen = (ctx) => {
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
     gradient.addColorStop(0, bgColorStart);
     gradient.addColorStop(1, bgColorStop);
@@ -35,22 +37,27 @@ const backgroundLinesInit = () => {
     deltaY: Math.random() - 0.5,
   });
 
-  const seedPoints = (num) => Array(num).fill(null).map((e) => createPoint());
+  const seedPoints = (num) => Array(num).fill(null).map(e => createPoint());
 
-  const movePoints = (oldPoints, step = 1) => oldPoints.map(point => {
+  const movePoint = (coord, delta, boundry, time) => {
+    let newCoord = coord + (time * delta) / 10; // anim. speed
+    if (newCoord <= 0) {
+      newCoord = -newCoord;
+    }
+    if (newCoord > boundry) {
+      let bounces = Math.floor(newCoord / boundry);
+      let tempCoord = newCoord % boundry;
+      newCoord = (bounces % 2) === 0 ? tempCoord : boundry - tempCoord;
+    }
+    return newCoord;
+  };
+
+  const movePoints = (points, virtualWidth, virtualHeight, time) => points.map(point => {
     let newPoint = {
       ...point,
-      x: point.x + (point.deltaX * step),
-      y: point.y + (point.deltaY * step)
+      x: movePoint(point.x, point.deltaX, virtualWidth, time),
+      y: movePoint(point.y, point.deltaY, virtualHeight, time)
     };
-    if (newPoint.x <= 0 || newPoint.x >= virtualWidth) {
-      newPoint.deltaX = -point.deltaX;
-      newPoint.x += (newPoint.deltaX * step);
-    }
-    if (newPoint.y <= 0 || newPoint.y >= virtualHeight) {
-      newPoint.deltaY = -point.deltaY;
-      newPoint.y += (newPoint.deltaY * step);
-    }
     return newPoint;
   });
 
@@ -87,34 +94,54 @@ const backgroundLinesInit = () => {
     cursorY = (evt.clientY - rect.top) * scaleY;
   }
 
-  const mouseMoveHandler = (evt) => {
+  const mouseMoveHandler = evt => {
     getMouseCoordinates(canvas, evt);
   };
 
-  const addCursorToPoints = (points) => [...points, {
+  // Time travel
+  const wheelHandler = evt => {
+    start = start + evt.deltaY * 5;
+  };
+
+  const addCursorToPoints = points => [...points, {
     x: cursorX,
     y: cursorY
   }];
 
-  const render = (timeStamp) => {
-    if (lastRender === undefined) {
-      lastRender = timeStamp;
-    }
-    let step = (timeStamp - lastRender) / 8; // set speed of animation
-    lastRender = timeStamp;
+  const pipe = (...fns) => timestamp => {
+    fns.reduce((res, fn) => fn(res), timestamp);
+  };
 
-    fillScreen();
-    points = movePoints(points, step);
-    pointsWithCursor = addCursorToPoints(points);
-    paintLines(makeLines(pointsWithCursor));
+  // Render loop
+  const render = (timestamp) => {
+    const time = timestamp - start;
+    fillScreen(ctx);
+    pipe(
+      movePointsBound,
+      addCursorToPoints,
+      makeLines,
+      paintLines
+    )(time);
+
     window.requestAnimationFrame(render);
   };
 
+  // Initialization
+  start = window.performance.now();
+  setSize();
 
+  // Set event handlers
   window.onresize = setSize;
   document.querySelector('body').addEventListener('mousemove', mouseMoveHandler);
-  setSize();
+  window.addEventListener('wheel', wheelHandler);
+
+  // Get initial points
   points = seedPoints(numPoints);
+
+  // Partial application of movePoints function 
+  const movePointsBound = movePoints.bind(null, points, virtualWidth, virtualHeight);
+
+  // Start animation
   window.requestAnimationFrame(render);
 };
 
