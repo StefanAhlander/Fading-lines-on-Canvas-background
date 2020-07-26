@@ -4,6 +4,7 @@ const backgroundLinesInit = () => {
   const virtualWidth = 1920;
   const virtualHeight = 1080;
   const maxLineLength = 200;
+  const lineWidth = 4;
   const numPoints = 130;
   const bgColorStart = '#0a080f';
   const bgColorStop = '#2a1b3d';
@@ -22,7 +23,7 @@ const backgroundLinesInit = () => {
 
   const drawLine = (p1, p2, color = lineColor) => {
     ctx.strokeStyle = color;
-    ctx.strokeWidth = 4;
+    ctx.strokeWidth = lineWidth;
 
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
@@ -37,7 +38,7 @@ const backgroundLinesInit = () => {
     deltaY: Math.random() - 0.5,
   });
 
-  const seedPoints = (num) => Array(num).fill(null).map(e => createPoint());
+  const seedPoints = num => Array(num).fill(null).map(e => createPoint());
 
   const movePoint = (coord, delta, boundry, time) => {
     let newCoord = coord + (time * delta) / 10; // anim. speed
@@ -67,8 +68,8 @@ const backgroundLinesInit = () => {
       for (let y = i + 1; y < points.length; y++) {
         const diffX = Math.abs(points[i].x - points[y].x);
         const diffY = Math.abs(points[i].y - points[y].y);
-        const hypo = Math.hypot(diffX, diffY);
-        if (hypo < maxLineLength) {
+        const hypot = Math.hypot(diffX, diffY);
+        if (hypot < maxLineLength) {
           lines.push([points[i], points[y], `rgba(${lineColor}, ${1 - (hypo / maxLineLength)})`]);
         }
       }
