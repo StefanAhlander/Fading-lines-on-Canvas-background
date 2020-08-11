@@ -101,7 +101,8 @@ const backgroundLinesInit = () => {
 
   // Time travel
   const wheelHandler = evt => {
-    start = start + evt.deltaY * 5;
+    const delta = evt.deltaY < 0 ? evt.deltaY : evt.deltaY * 2;
+    start = start + delta;
   };
 
   const addCursorToPoints = points => [...points, {
