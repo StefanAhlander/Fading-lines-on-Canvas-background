@@ -70,7 +70,7 @@ const backgroundLinesInit = () => {
         const diffY = Math.abs(points[i].y - points[y].y);
         const hypot = Math.hypot(diffX, diffY);
         if (hypot < maxLineLength) {
-          lines.push([points[i], points[y], `rgba(${lineColor}, ${1 - (hypo / maxLineLength)})`]);
+          lines.push([points[i], points[y], `rgba(${lineColor}, ${1 - (hypot / maxLineLength)})`]);
         }
       }
     }
